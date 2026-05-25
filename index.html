@@ -25,6 +25,9 @@
       justify-content: center;
       padding: 24px;
       transition: background 0.9s ease, color 0.6s ease;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     body.revealed {
@@ -124,6 +127,9 @@
       height: 100%;
       object-fit: cover;
       display: block;
+      -webkit-user-drag: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .photo-frame span {
@@ -1280,6 +1286,15 @@
 
     window.addEventListener("pointerup", finishPointerInteraction);
     window.addEventListener("pointercancel", finishPointerInteraction);
+    window.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+    window.addEventListener("dragstart", (event) => {
+      event.preventDefault();
+    });
+    window.addEventListener("selectstart", (event) => {
+      event.preventDefault();
+    });
     window.addEventListener("resize", () => {
       positionFramesFromAnchors();
       if (focusedFrameState) {
