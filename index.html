@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Belated Happy 26th Birthday</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(255, 194, 94, 0.16), transparent 16%),
+        radial-gradient(circle at 50% 48%, rgba(255, 121, 56, 0.1), transparent 28%),
+        linear-gradient(180deg, #050608, #090b10 45%, #120f14);
+      color: #4a274f;
+      overflow-x: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      transition: background 0.9s ease, color 0.6s ease;
+    }
+
+    body.revealed {
+      background:
+        radial-gradient(circle at top left, #ffe4f1, transparent 32%),
+        radial-gradient(circle at bottom right, #d8f3ff, transparent 34%),
+        linear-gradient(135deg, #fff7ad, #ffd1dc 45%, #c8e7ff);
+    }
+
+    .floating-frames {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 6;
+      opacity: 0;
+      transform: scale(1.03);
+      visibility: hidden;
+      transition: opacity 0.8s ease, transform 0.8s ease, visibility 0.8s ease;
+    }
+
+    body.revealed .floating-frames {
+      opacity: 1;
+      transform: scale(1);
+      visibility: visible;
+    }
+
+    .photo-frame {
+      position: absolute;
+      width: min(12vw, 132px);
+      padding: 8px 8px 12px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow:
+        0 22px 38px rgba(105, 64, 126, 0.18),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+      opacity: 0.92;
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+      touch-action: none;
+      user-select: none;
+      cursor: grab;
+      will-change: transform;
+      transform-origin: center center;
+      transition: opacity 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    body.revealed .photo-frame {
+      pointer-events: auto;
+    }
+
+    .photo-frame.dragging {
+      cursor: grabbing;
+      opacity: 0.98;
+      box-shadow:
+        0 28px 52px rgba(105, 64, 126, 0.28),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.88);
+    }
+
+    .photo-frame.focused {
+      opacity: 1;
+      transform-origin: top left;
+      box-shadow:
+        0 34px 80px rgba(33, 19, 43, 0.42),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.96);
+    }
+
+    .photo-frame-media {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      border-radius: 14px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.7), transparent 35%),
+        linear-gradient(145deg, #ffd5ea, #dbe8ff 55%, #fff2b8);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .photo-frame-media::after {
+      content: "photo";
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(124, 47, 143, 0.42);
+    }
+
+    .photo-frame.has-image .photo-frame-media::after {
+      display: none;
+    }
+
+    .photo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .photo-frame span {
+      display: block;
+      margin-top: 7px;
+      text-align: center;
+      font-size: 0.66rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #9f5a8f;
+    }
+
+    .card {
+      position: relative;
+      z-index: 2;
+      width: min(960px, 100%);
+      min-height: min(760px, calc(100vh - 48px));
+      background: transparent;
+      backdrop-filter: blur(0);
+      border: 1px solid transparent;
+      border-radius: 32px;
+      box-shadow: none;
+      overflow: hidden;
+      transition:
+        background 0.8s ease,
+        backdrop-filter 0.8s ease,
+        border-color 0.8s ease,
+        box-shadow 0.8s ease;
+    }
+
+    body.revealed .card {
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(18px);
+      border-color: rgba(255, 255, 255, 0.7);
+      box-shadow: 0 30px 90px rgba(123, 66, 136, 0.22);
+    }
+
+    .scene {
+      position: absolute;
+      inset: 0;
+      padding: clamp(28px, 5vw, 56px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: opacity 0.6s ease, transform 0.6s ease, visibility 0.6s ease;
+    }
+
+    .scene-hidden {
+      opacity: 0;
+      transform: translateY(24px) scale(0.98);
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .scene-visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      visibility: visible;
+    }
+
+    .intro-scene {
+      gap: 18px;
+    }
+
+    .intro-scene > :not(.cake-wrap) {
+      display: none;
+    }
+
+    .intro-scene .tap-cue {
+      display: block;
+      margin-top: 18px;
+      font-size: clamp(1rem, 2.6vw, 1.2rem);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #ffd78a;
+      text-shadow:
+        0 0 10px rgba(255, 194, 94, 0.55),
+        0 0 22px rgba(255, 140, 41, 0.32);
+    }
+
+    .intro-scene.is-blowing {
+      animation: introLift 0.95s ease forwards;
+    }
+
+    @keyframes introLift {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      65% {
+        opacity: 1;
+        transform: translateY(-10px) scale(1.02);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-28px) scale(0.96);
+      }
+    }
+
+    .message-scene {
+      justify-content: flex-start;
+      padding-top: clamp(36px, 7vw, 70px);
+      padding-bottom: clamp(28px, 5vw, 56px);
+      overflow-y: auto;
+    }
+
+    .message-scene .content {
+      max-width: 760px;
+      width: 100%;
+    }
+
+    .intro-title {
+      font-size: clamp(2.1rem, 6vw, 4.3rem);
+      line-height: 1;
+      color: #7c2f8f;
+      text-shadow: 0 5px 0 rgba(255, 255, 255, 0.65);
+    }
+
+    .intro-subtitle {
+      max-width: 520px;
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      line-height: 1.7;
+      color: #6a496f;
+    }
+
+    .intro-hint {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: #b32972;
+      letter-spacing: 0.02em;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: #fff0f7;
+      color: #b32972;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 22px;
+      box-shadow: inset 0 0 0 1px rgba(179, 41, 114, 0.12);
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 5rem);
+      line-height: 0.95;
+      margin-bottom: 18px;
+      color: #7c2f8f;
+      text-shadow: 0 5px 0 rgba(255, 255, 255, 0.65);
+    }
+
+    h1 span {
+      display: block;
+      color: #ff5f9e;
+    }
+
+    .age {
+      display: inline-grid;
+      place-items: center;
+      width: 132px;
+      height: 132px;
+      margin: 18px auto 26px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #ff78b7, #8d5cf6);
+      color: white;
+      font-size: 4.5rem;
+      font-weight: 900;
+      box-shadow: 0 18px 35px rgba(141, 92, 246, 0.32);
+      position: relative;
+    }
+
+    .age::after {
+      content: "26";
+      position: absolute;
+      inset: 8px;
+      border: 2px dashed rgba(255, 255, 255, 0.7);
+      border-radius: inherit;
+      display: grid;
+      place-items: center;
+    }
+
+    .message {
+      max-width: 700px;
+      margin: 0 auto 34px;
+      font-size: clamp(1.05rem, 2vw, 1.25rem);
+      line-height: 1.7;
+      color: #5b3a61;
+    }
+
+    .cake-wrap {
+      margin: 26px auto 18px;
+      display: grid;
+      place-items: center;
+    }
+
+    .intro-scene .cake-wrap {
+      margin: 0;
+    }
+
+    .cake {
+      position: relative;
+      width: 250px;
+      height: 210px;
+      transform-origin: bottom center;
+      transition: transform 0.45s ease, filter 0.45s ease;
+    }
+
+    .intro-scene .cake {
+      animation: cakeEnter 0.95s ease both 0.2s;
+      filter: drop-shadow(0 0 24px rgba(255, 169, 57, 0.16));
+    }
+
+    @keyframes cakeEnter {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.92);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .plate {
+      position: absolute;
+      bottom: 0;
+      left: 18px;
+      width: 214px;
+      height: 24px;
+      background: #f7f7ff;
+      border-radius: 50%;
+      box-shadow: 0 8px 15px rgba(8, 8, 12, 0.35);
+    }
+
+    .tier {
+      position: absolute;
+      left: 38px;
+      bottom: 18px;
+      width: 174px;
+      height: 92px;
+      border-radius: 18px 18px 12px 12px;
+      background: linear-gradient(#ff9cc9 0 38%, #fff3b0 38% 62%, #ff9cc9 62%);
+      box-shadow:
+        inset 0 -8px rgba(160, 75, 130, 0.08),
+        0 12px 24px rgba(0, 0, 0, 0.28);
+    }
+
+    .tier::before {
+      content: "";
+      position: absolute;
+      inset: -14px 0 auto;
+      height: 32px;
+      background: #fff;
+      border-radius: 18px 18px 50% 50%;
+      box-shadow: 0 8px 0 rgba(255, 255, 255, 0.3);
+    }
+
+    .sprinkles {
+      position: absolute;
+      inset: 12px 18px;
+      background-image:
+        radial-gradient(circle, #8d5cf6 2px, transparent 3px),
+        radial-gradient(circle, #ff5f9e 2px, transparent 3px),
+        radial-gradient(circle, #37c6ff 2px, transparent 3px),
+        radial-gradient(circle, #ffd23f 2px, transparent 3px);
+      background-size: 34px 25px, 28px 32px, 38px 31px, 31px 28px;
+      opacity: 0.85;
+    }
+
+    .candle {
+      position: absolute;
+      left: 113px;
+      bottom: 126px;
+      width: 24px;
+      height: 64px;
+      background: repeating-linear-gradient(45deg, #fff 0 8px, #ff5f9e 8px 15px);
+      border-radius: 8px;
+      box-shadow: 0 5px 0 rgba(0, 0, 0, 0.05);
+      cursor: pointer;
+      outline: none;
+      transition: transform 0.2s ease;
+    }
+
+    .candle::before {
+      content: "";
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      width: 3px;
+      height: 10px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: linear-gradient(180deg, #3f2614, #0c0908);
+    }
+
+    .candle:hover,
+    .candle:focus-visible {
+      transform: translateY(-4px);
+    }
+
+    .flame {
+      position: absolute;
+      left: 50%;
+      top: -38px;
+      width: 26px;
+      height: 38px;
+      transform: translateX(-50%);
+      background:
+        radial-gradient(circle at 50% 72%, #fff9cf 0 16%, #ffd65e 34%, #ff9a1f 60%, #ff5b1d 82%);
+      border-radius: 58% 58% 66% 66% / 86% 86% 42% 42%;
+      animation: flicker 0.16s infinite alternate, flameLift 2.2s ease-in-out infinite;
+      filter:
+        drop-shadow(0 0 12px rgba(255, 177, 47, 0.9))
+        drop-shadow(0 0 26px rgba(255, 137, 47, 0.65));
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .flame::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 3px;
+      width: 11px;
+      height: 19px;
+      transform: translateX(-50%);
+      border-radius: inherit;
+      background: radial-gradient(circle at 50% 72%, #ffffff 0 24%, #fff0a5 52%, rgba(255, 240, 165, 0) 84%);
+      opacity: 0.95;
+    }
+
+    .flame::after {
+      content: "";
+      position: absolute;
+      inset: -14px -16px -10px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 197, 86, 0.44) 0, rgba(255, 140, 41, 0.2) 42%, rgba(255, 140, 41, 0) 74%);
+      animation: auraPulse 1.9s ease-in-out infinite;
+      z-index: -1;
+    }
+
+    @keyframes flicker {
+      from {
+        transform: translateX(-50%) rotate(-5deg) scale(0.94, 1.02);
+      }
+      to {
+        transform: translateX(-50%) rotate(6deg) scale(1.06, 0.98);
+      }
+    }
+
+    @keyframes flameLift {
+      0%,
+      100% {
+        top: -38px;
+      }
+      50% {
+        top: -41px;
+      }
+    }
+
+    @keyframes auraPulse {
+      0%,
+      100% {
+        transform: scale(0.92);
+        opacity: 0.66;
+      }
+      50% {
+        transform: scale(1.08);
+        opacity: 1;
+      }
+    }
+
+    .embers {
+      position: absolute;
+      left: 50%;
+      top: -48px;
+      width: 60px;
+      height: 62px;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .embers span {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      width: 5px;
+      height: 5px;
+      margin-left: -2px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff8bf 0 30%, #ffb347 58%, rgba(255, 179, 71, 0) 72%);
+      opacity: 0;
+      animation: emberFloat 2.3s linear infinite;
+    }
+
+    .embers span:nth-child(1) {
+      animation-delay: 0.1s;
+      --ember-x: -12px;
+    }
+
+    .embers span:nth-child(2) {
+      animation-delay: 0.7s;
+      --ember-x: 4px;
+    }
+
+    .embers span:nth-child(3) {
+      animation-delay: 1.3s;
+      --ember-x: 14px;
+    }
+
+    @keyframes emberFloat {
+      0% {
+        opacity: 0;
+        transform: translate(var(--ember-x, 0), 0) scale(0.4);
+      }
+      20% {
+        opacity: 0.8;
+      }
+      100% {
+        opacity: 0;
+        transform: translate(calc(var(--ember-x, 0) + 8px), -30px) scale(1.2);
+      }
+    }
+
+    .smoke {
+      position: absolute;
+      left: 50%;
+      top: -38px;
+      transform: translateX(-50%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .smoke span {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(130, 130, 150, 0.4);
+      animation: smokeUp 1.4s ease-out forwards;
+    }
+
+    .smoke span:nth-child(2) {
+      left: -16px;
+      animation-delay: 0.15s;
+    }
+
+    .smoke span:nth-child(3) {
+      left: 14px;
+      animation-delay: 0.28s;
+    }
+
+    @keyframes smokeUp {
+      to {
+        opacity: 0;
+        transform: translateY(-80px) scale(2.4);
+      }
+    }
+
+    .cake.blown .flame {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-8px) scale(0.1);
+    }
+
+    .cake.blown .smoke {
+      opacity: 1;
+    }
+
+    .cake.blown {
+      transform: translateY(-4px) scale(1.02);
+      filter: saturate(0.94);
+    }
+
+    .wish {
+      min-height: 56px;
+      margin-top: 24px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #b32972;
+    }
+
+    .show {
+      opacity: 1;
+      transform: translateY(0);
+      transition: all 0.45s ease;
+    }
+
+    .floating-heart {
+      position: fixed;
+      z-index: 5;
+      font-size: 26px;
+      animation: floatHeart 1.4s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes floatHeart {
+      to {
+        transform: translateY(-120px) scale(1.6) rotate(18deg);
+        opacity: 0;
+      }
+    }
+
+    footer {
+      margin-top: 30px;
+      font-size: 0.95rem;
+      color: #775078;
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 12px;
+      }
+
+      .card {
+        min-height: min(720px, calc(100vh - 24px));
+        border-radius: 24px;
+      }
+
+      .scene {
+        padding: 22px 18px 26px;
+      }
+
+      .cake {
+        transform: scale(0.88);
+      }
+
+      .cake.blown {
+        transform: translateY(-4px) scale(0.92);
+      }
+
+      .message-scene {
+        padding-top: 28px;
+      }
+
+      .badge {
+        margin-bottom: 18px;
+      }
+
+      .message {
+        margin-bottom: 24px;
+        font-size: 1rem;
+      }
+
+      .wish {
+        margin-top: 18px;
+        font-size: 1rem;
+        min-height: 0;
+      }
+
+      footer {
+        margin-top: 22px;
+        font-size: 0.86rem;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .photo-frame {
+        width: min(13vw, 108px);
+        padding: 7px 7px 10px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .photo-frame {
+        width: min(16vw, 68px);
+        padding: 5px 5px 8px;
+        border-radius: 14px;
+      }
+
+      .photo-frame span {
+        margin-top: 4px;
+        font-size: 0.46rem;
+        letter-spacing: 0.05em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="floating-frames" id="floatingFrames" aria-hidden="true"></div>
+
+  <main class="card">
+    <section class="scene intro-scene scene-visible" id="introScene" aria-label="Birthday cake intro">
+      <p class="intro-title">Make a wish</p>
+      <p class="intro-subtitle">
+        The cake arrives first, candle glowing and waiting. Tap the candle to blow it out and reveal the birthday message.
+      </p>
+
+      <section class="cake-wrap" aria-label="Interactive birthday cake">
+        <div class="cake" id="cake">
+          <div class="plate"></div>
+          <div class="tier"><div class="sprinkles"></div></div>
+          <div
+            class="candle"
+            id="candle"
+            role="button"
+            tabindex="0"
+            aria-label="Blow out the birthday candle"
+          >
+            <div class="flame"></div>
+            <div class="embers"><span></span><span></span><span></span></div>
+            <div class="smoke"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+      </section>
+
+      <p class="tap-cue">Tap the Candle</p>
+
+      <p class="intro-hint">Tap the candle flame to blow it out.</p>
+    </section>
+
+    <section class="scene message-scene scene-hidden" id="messageScene" aria-label="Birthday message">
+      <div class="content">
+        <div class="badge">&#10024; With Love and Best Wishes &#10024;</div>
+        <h1>Happy Belated <span>Birthday!</span></h1>
+        <div class="age" aria-label="26 years old">26</div>
+
+        <p class="message">
+          Happy Birthday Juju! I wish you the happiest and the most successful 26th year ahead. May it be filled with exciting adventures, growth, and unforgettable memories. Keep shining bright and embracing all the wonderful things life has to offer! &#127881;
+        </p>
+
+        <footer>
+          Tap and Hold the photos to see them on a close up view.;
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const pageBody = document.body;
+    const floatingFrames = document.getElementById("floatingFrames");
+    const cake = document.getElementById("cake");
+    const candle = document.getElementById("candle");
+    const introScene = document.getElementById("introScene");
+    const messageScene = document.getElementById("messageScene");
+    let isTransitioning = false;
+    let frameStates = [];
+    let draggedFrameState = null;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+    let highestFrameZ = 1;
+    let motionStart = 0;
+    let pressedFrameState = null;
+    let focusedFrameState = null;
+    let pressPointerId = null;
+    let pressStartX = 0;
+    let pressStartY = 0;
+    let holdTimer = null;
+
+    const HOLD_DELAY_MS = 220;
+    const DRAG_START_DISTANCE = 10;
+
+    const floatingPhotoFrames = [
+      {
+        src: "images/1.jpeg",
+        title: "Memory 01",
+        top: "8%",
+        left: "4%",
+        rotate: "-10deg",
+        driftX: "18px",
+        driftY: "-26px",
+        duration: "13s",
+        delay: "0s"
+      },
+      {
+        src: "images/2.png",
+        title: "Memory 02",
+        top: "14%",
+        right: "5%",
+        rotate: "11deg",
+        driftX: "-18px",
+        driftY: "22px",
+        duration: "15s",
+        delay: "-2s"
+      },
+      {
+        src: "images/3.jpeg",
+        title: "Memory 03",
+        top: "56%",
+        left: "6%",
+        rotate: "8deg",
+        driftX: "14px",
+        driftY: "-18px",
+        duration: "14s",
+        delay: "-4s"
+      },
+      {
+        src: "images/5.jpeg",
+        title: "Memory 04",
+        top: "60%",
+        right: "7%",
+        rotate: "-8deg",
+        driftX: "-16px",
+        driftY: "-22px",
+        duration: "16s",
+        delay: "-1s"
+      },
+      {
+        src: "images/8.webp",
+        title: "Memory 05",
+        top: "36%",
+        right: "16%",
+        rotate: "-4deg",
+        driftX: "12px",
+        driftY: "20px",
+        duration: "17s",
+        delay: "-5s"
+      },
+      {
+        src: "images/9.webp",
+        title: "Memory 06",
+        top: "24%",
+        left: "18%",
+        rotate: "-6deg",
+        driftX: "12px",
+        driftY: "-16px",
+        duration: "18s",
+        delay: "-3s"
+      },
+      {
+        src: "images/10.webp",
+        title: "Memory 07",
+        top: "10%",
+        right: "23%",
+        rotate: "7deg",
+        driftX: "-14px",
+        driftY: "16px",
+        duration: "14s",
+        delay: "-6s"
+      },
+      {
+        src: "images/11.webp",
+        title: "Memory 08",
+        top: "72%",
+        left: "19%",
+        rotate: "-11deg",
+        driftX: "16px",
+        driftY: "-12px",
+        duration: "19s",
+        delay: "-2.5s"
+      },
+      {
+        src: "images/12.jpg",
+        title: "Memory 09",
+        top: "73%",
+        right: "18%",
+        rotate: "10deg",
+        driftX: "-12px",
+        driftY: "-18px",
+        duration: "15s",
+        delay: "-4.5s"
+      },
+      {
+        src: "images/13.jpg",
+        title: "Memory 10",
+        top: "44%",
+        left: "2%",
+        rotate: "5deg",
+        driftX: "10px",
+        driftY: "22px",
+        duration: "17s",
+        delay: "-7s"
+      },
+      {
+        src: "images/14.jpg",
+        title: "Memory 11",
+        top: "6%",
+        left: "29%",
+        rotate: "-7deg",
+        driftX: "15px",
+        driftY: "-14px",
+        duration: "18s",
+        delay: "-1.8s"
+      },
+      {
+        src: "images/15.jpg",
+        title: "Memory 12",
+        top: "18%",
+        right: "31%",
+        rotate: "9deg",
+        driftX: "-13px",
+        driftY: "15px",
+        duration: "16s",
+        delay: "-5.8s"
+      },
+      {
+        src: "images/16.jpg",
+        title: "Memory 13",
+        top: "52%",
+        left: "27%",
+        rotate: "-9deg",
+        driftX: "11px",
+        driftY: "18px",
+        duration: "20s",
+        delay: "-3.6s"
+      },
+      {
+        src: "images/18.jpg",
+        title: "Memory 14",
+        top: "67%",
+        right: "30%",
+        rotate: "6deg",
+        driftX: "-17px",
+        driftY: "-11px",
+        duration: "17s",
+        delay: "-6.4s"
+      },
+      {
+        src: "images/19.jpg",
+        title: "Memory 15",
+        top: "31%",
+        left: "40%",
+        rotate: "4deg",
+        driftX: "9px",
+        driftY: "-19px",
+        duration: "19s",
+        delay: "-2.2s"
+      },
+      {
+        src: "images/20.jpg",
+        title: "Memory 16",
+        top: "58%",
+        right: "42%",
+        rotate: "-5deg",
+        driftX: "-10px",
+        driftY: "17px",
+        duration: "18.5s",
+        delay: "-7.4s"
+      }
+    ];
+
+    function burstHearts() {
+      const shapes = ["*", "+", "o", "\u2665", "\u2726"];
+      for (let i = 0; i < 18; i++) {
+        const heart = document.createElement("div");
+        heart.className = "floating-heart";
+        heart.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+        heart.style.left = 35 + Math.random() * 30 + "vw";
+        heart.style.top = 58 + Math.random() * 16 + "vh";
+        heart.style.animationDelay = Math.random() * 0.25 + "s";
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 1700);
+      }
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function clearHoldTimer() {
+      if (holdTimer) {
+        window.clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+    }
+
+    function percentToPixels(percent, total) {
+      return total * (parseFloat(percent) / 100);
+    }
+
+    function getFrameSize(frame) {
+      return {
+        width: frame.offsetWidth || 0,
+        height: frame.offsetHeight || 0
+      };
+    }
+
+    function getBasePositionFromAnchors(state) {
+      const { width, height } = getFrameSize(state.element);
+      const x = state.anchorLeft != null
+        ? percentToPixels(state.anchorLeft, window.innerWidth)
+        : window.innerWidth - percentToPixels(state.anchorRight || "0%", window.innerWidth) - width;
+      const y = percentToPixels(state.anchorTop, window.innerHeight);
+
+      return {
+        x: clamp(x, 0, Math.max(0, window.innerWidth - width)),
+        y: clamp(y, 0, Math.max(0, window.innerHeight - height))
+      };
+    }
+
+    function getFrameMotion(state, now) {
+      if (state.focused) {
+        return { driftX: 0, driftY: 0, rotate: 0, scale: state.focusScale };
+      }
+
+      if (state.dragging) {
+        return { driftX: 0, driftY: 0, rotate: state.rotate, scale: 1 };
+      }
+
+      const elapsed = now - motionStart + state.delayMs;
+      const progress = elapsed / state.durationMs;
+      const swing = progress * Math.PI * 2;
+
+      return {
+        driftX: Math.sin(swing) * state.driftX,
+        driftY: Math.cos(swing * 0.92) * state.driftY,
+        rotate: state.rotate + Math.sin(swing * 1.08) * 2.2,
+        scale: 1
+      };
+    }
+
+    function renderFloatingFrames(now) {
+      frameStates.forEach((state) => {
+        const motion = getFrameMotion(state, now);
+        const visualX = state.focused
+          ? (window.innerWidth - state.element.offsetWidth * motion.scale) / 2
+          : state.baseX + motion.driftX;
+        const visualY = state.focused
+          ? (window.innerHeight - state.element.offsetHeight * motion.scale) / 2
+          : state.baseY + motion.driftY;
+        state.element.style.transform =
+          `translate3d(${visualX}px, ${visualY}px, 0) rotate(${motion.rotate}deg) scale(${motion.scale})`;
+      });
+
+      window.requestAnimationFrame(renderFloatingFrames);
+    }
+
+    function positionFramesFromAnchors() {
+      frameStates.forEach((state) => {
+        if (state.wasDragged) {
+          const { width, height } = getFrameSize(state.element);
+          state.baseX = clamp(state.baseX, 0, Math.max(0, window.innerWidth - width));
+          state.baseY = clamp(state.baseY, 0, Math.max(0, window.innerHeight - height));
+          return;
+        }
+
+        const anchoredPosition = getBasePositionFromAnchors(state);
+        state.baseX = anchoredPosition.x;
+        state.baseY = anchoredPosition.y;
+      });
+    }
+
+    function updateDraggedFramePosition(pointerX, pointerY) {
+      if (!draggedFrameState) {
+        return;
+      }
+
+      const { width, height } = getFrameSize(draggedFrameState.element);
+      draggedFrameState.baseX = clamp(pointerX - dragOffsetX, 0, Math.max(0, window.innerWidth - width));
+      draggedFrameState.baseY = clamp(pointerY - dragOffsetY, 0, Math.max(0, window.innerHeight - height));
+      draggedFrameState.wasDragged = true;
+    }
+
+    function stopDragging(pointerId) {
+      if (!draggedFrameState) {
+        return;
+      }
+
+      draggedFrameState.dragging = false;
+      draggedFrameState.element.classList.remove("dragging");
+      if (pointerId != null && draggedFrameState.element.hasPointerCapture(pointerId)) {
+        draggedFrameState.element.releasePointerCapture(pointerId);
+      }
+      draggedFrameState = null;
+    }
+
+    function stopFocusedPreview() {
+      if (!focusedFrameState) {
+        return;
+      }
+
+      focusedFrameState.focused = false;
+      focusedFrameState.focusScale = 1;
+      focusedFrameState.element.classList.remove("focused");
+      focusedFrameState = null;
+    }
+
+    function showFocusedPreview(state) {
+      stopFocusedPreview();
+      const width = state.element.offsetWidth || 1;
+      const height = state.element.offsetHeight || 1;
+      const maxWidth = window.innerWidth - 24;
+      const maxHeight = window.innerHeight - 24;
+      state.focusScale = Math.min(maxWidth / width, maxHeight / height);
+      state.focused = true;
+      state.element.classList.add("focused");
+      state.element.style.zIndex = String(++highestFrameZ);
+      focusedFrameState = state;
+    }
+
+    function beginDragging(event, state) {
+      if (!pageBody.classList.contains("revealed")) {
+        return;
+      }
+
+      const now = performance.now();
+      const motion = getFrameMotion(state, now);
+      const currentX = state.baseX + motion.driftX;
+      const currentY = state.baseY + motion.driftY;
+
+      draggedFrameState = state;
+      state.dragging = true;
+      state.element.classList.add("dragging");
+      state.element.setPointerCapture(event.pointerId);
+      state.element.style.zIndex = String(++highestFrameZ);
+      dragOffsetX = event.clientX - currentX;
+      dragOffsetY = event.clientY - currentY;
+      updateDraggedFramePosition(event.clientX, event.clientY);
+    }
+
+    function beginFramePress(event, state) {
+      if (!pageBody.classList.contains("revealed")) {
+        return;
+      }
+
+      clearHoldTimer();
+      stopFocusedPreview();
+      pressedFrameState = state;
+      pressPointerId = event.pointerId;
+      pressStartX = event.clientX;
+      pressStartY = event.clientY;
+      state.element.setPointerCapture(event.pointerId);
+      holdTimer = window.setTimeout(() => {
+        if (pressedFrameState === state && !draggedFrameState) {
+          showFocusedPreview(state);
+        }
+      }, HOLD_DELAY_MS);
+    }
+
+    function buildFloatingFrames() {
+      frameStates = [];
+      floatingPhotoFrames.forEach((photo) => {
+        const frame = document.createElement("figure");
+        frame.className = "photo-frame";
+        const media = document.createElement("div");
+        media.className = "photo-frame-media";
+        const image = document.createElement("img");
+
+        frame.style.top = photo.top;
+        frame.style.left = photo.left || "auto";
+        frame.style.right = photo.right || "auto";
+        frame.style.setProperty("--rotate", photo.rotate);
+        frame.style.setProperty("--drift-x", photo.driftX);
+        frame.style.setProperty("--drift-y", photo.driftY);
+        frame.style.setProperty("--duration", photo.duration);
+        frame.style.setProperty("--delay", photo.delay);
+        frame.style.left = "0";
+        frame.style.top = "0";
+        if (photo.tabletHide) {
+          frame.dataset.tabletHide = "true";
+        }
+        if (photo.mobileHide) {
+          frame.dataset.mobileHide = "true";
+        }
+
+        image.src = photo.src;
+        image.alt = photo.title;
+        image.loading = "lazy";
+        image.draggable = false;
+        image.addEventListener("load", () => {
+          frame.classList.add("has-image");
+        });
+        image.addEventListener("error", () => {
+          image.remove();
+        });
+
+        media.appendChild(image);
+        frame.appendChild(media);
+        frame.insertAdjacentHTML("beforeend", `<span>${photo.title}</span>`);
+        floatingFrames.appendChild(frame);
+
+        const state = {
+          element: frame,
+          anchorTop: photo.top,
+          anchorLeft: photo.left ?? null,
+          anchorRight: photo.right ?? null,
+          baseX: 0,
+          baseY: 0,
+          driftX: parseFloat(photo.driftX),
+          driftY: parseFloat(photo.driftY),
+          rotate: parseFloat(photo.rotate),
+          durationMs: parseFloat(photo.duration) * 1000,
+          delayMs: parseFloat(photo.delay) * 1000,
+          focused: false,
+          focusScale: 1,
+          dragging: false,
+          wasDragged: false
+        };
+
+        frame.addEventListener("pointerdown", (event) => beginFramePress(event, state));
+        frameStates.push(state);
+      });
+
+      positionFramesFromAnchors();
+      motionStart = performance.now();
+      window.requestAnimationFrame(renderFloatingFrames);
+    }
+
+    function showMessageScene() {
+      pageBody.classList.add("revealed");
+      introScene.classList.remove("scene-visible");
+      introScene.classList.add("scene-hidden");
+      messageScene.classList.remove("scene-hidden");
+      messageScene.classList.add("scene-visible");
+      isTransitioning = false;
+    }
+
+    function blowCandle() {
+      if (cake.classList.contains("blown") || isTransitioning) {
+        return;
+      }
+
+      isTransitioning = true;
+      cake.classList.add("blown");
+      introScene.classList.add("is-blowing");
+      burstHearts();
+      window.setTimeout(showMessageScene, 900);
+    }
+
+    candle.addEventListener("click", blowCandle);
+
+    candle.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        blowCandle();
+      }
+    });
+
+    window.addEventListener("pointermove", (event) => {
+      if (event.pointerId === pressPointerId && pressedFrameState && !draggedFrameState && !focusedFrameState) {
+        const distance = Math.hypot(event.clientX - pressStartX, event.clientY - pressStartY);
+        if (distance > DRAG_START_DISTANCE) {
+          clearHoldTimer();
+          beginDragging(event, pressedFrameState);
+        }
+      }
+
+      if (draggedFrameState && event.pointerId === pressPointerId) {
+        updateDraggedFramePosition(event.clientX, event.clientY);
+      }
+    });
+
+    function finishPointerInteraction(event) {
+      if (event.pointerId !== pressPointerId) {
+        return;
+      }
+
+      clearHoldTimer();
+      if (draggedFrameState) {
+        stopDragging(event.pointerId);
+      }
+      stopFocusedPreview();
+      if (pressedFrameState && pressedFrameState.element.hasPointerCapture(event.pointerId)) {
+        pressedFrameState.element.releasePointerCapture(event.pointerId);
+      }
+      pressedFrameState = null;
+      pressPointerId = null;
+    }
+
+    window.addEventListener("pointerup", finishPointerInteraction);
+    window.addEventListener("pointercancel", finishPointerInteraction);
+    window.addEventListener("resize", () => {
+      positionFramesFromAnchors();
+      if (focusedFrameState) {
+        showFocusedPreview(focusedFrameState);
+      }
+    });
+
+    buildFloatingFrames();
+  </script>
+</body>
+</html>
